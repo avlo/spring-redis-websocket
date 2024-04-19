@@ -27,7 +27,8 @@ public class RedisChatMessageListener {
 	}
 
 	public Mono<Void> subscribeMessageChannelAndPublishOnWebSocket() {
-		return reactiveStringRedisTemplate.listenTo(new PatternTopic(MESSAGE_TOPIC))
+		return reactiveStringRedisTemplate.listenTo(
+				new PatternTopic(MESSAGE_TOPIC))
 			.map(ReactiveSubscription.Message::getMessage)
 			.flatMap(message -> objectStringConverter.stringToObject(message, ChatMessage.class))
 			.filter(chatMessage -> !chatMessage.getMessage().isEmpty())

@@ -25,27 +25,28 @@ import static com.github.rawsanj.config.ChatConstants.WEBSOCKET_MESSAGE_MAPPING;
 @Configuration(proxyBeanMethods = false)
 public class ReactiveWebSocketConfig {
 
-	@Bean
-	public ChatWebSocketHandler webSocketHandler(RedisChatMessagePublisher redisChatMessagePublisher, RedisAtomicLong activeUserCounter,
-												 ObjectStringConverter objectStringConverter) {
-		Sinks.Many<ChatMessage> chatMessageSink = Sinks.many().multicast().directBestEffort();
-		return new ChatWebSocketHandler(chatMessageSink, redisChatMessagePublisher, activeUserCounter, objectStringConverter);
-	}
+  @Bean
+  public ChatWebSocketHandler webSocketHandler(
+      RedisChatMessagePublisher redisChatMessagePublisher,
+      RedisAtomicLong activeUserCounter,
+      ObjectStringConverter objectStringConverter) {
+    Sinks.Many<ChatMessage> chatMessageSink = Sinks.many().multicast().directBestEffort();
+    return new ChatWebSocketHandler(chatMessageSink, redisChatMessagePublisher, activeUserCounter, objectStringConverter);
+  }
 
-	@Bean
-	public HandlerMapping webSocketHandlerMapping(ChatWebSocketHandler webSocketHandler) {
-		Map<String, WebSocketHandler> map = new HashMap<>();
-		map.put(WEBSOCKET_MESSAGE_MAPPING, webSocketHandler);
-		SimpleUrlHandlerMapping handlerMapping = new SimpleUrlHandlerMapping();
-		handlerMapping.setCorsConfigurations(Collections.singletonMap("*", new CorsConfiguration().applyPermitDefaultValues()));
-		handlerMapping.setOrder(1);
-		handlerMapping.setUrlMap(map);
-		return handlerMapping;
-	}
+  @Bean
+  public HandlerMapping webSocketHandlerMapping(ChatWebSocketHandler webSocketHandler) {
+    Map<String, WebSocketHandler> map = new HashMap<>();
+    map.put(WEBSOCKET_MESSAGE_MAPPING, webSocketHandler);
+    SimpleUrlHandlerMapping handlerMapping = new SimpleUrlHandlerMapping();
+    handlerMapping.setCorsConfigurations(Collections.singletonMap("*", new CorsConfiguration().applyPermitDefaultValues()));
+    handlerMapping.setOrder(1);
+    handlerMapping.setUrlMap(map);
+    return handlerMapping;
+  }
 
-	@Bean
-	public WebSocketHandlerAdapter handlerAdapter() {
-		return new WebSocketHandlerAdapter();
-	}
-
+  @Bean
+  public WebSocketHandlerAdapter handlerAdapter() {
+    return new WebSocketHandlerAdapter();
+  }
 }

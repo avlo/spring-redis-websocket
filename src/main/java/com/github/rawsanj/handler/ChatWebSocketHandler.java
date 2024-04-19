@@ -21,8 +21,11 @@ public class ChatWebSocketHandler implements WebSocketHandler {
   private final RedisAtomicLong activeUserCounter;
   private final ObjectStringConverter objectStringConverter;
 
-  public ChatWebSocketHandler(Sinks.Many<ChatMessage> chatMessageSink, RedisChatMessagePublisher redisChatMessagePublisher,
-      RedisAtomicLong activeUserCounter, ObjectStringConverter objectStringConverter) {
+  public ChatWebSocketHandler(
+      Sinks.Many<ChatMessage> chatMessageSink,
+      RedisChatMessagePublisher redisChatMessagePublisher,
+      RedisAtomicLong activeUserCounter,
+      ObjectStringConverter objectStringConverter) {
     this.chatMessageSink = chatMessageSink;
     this.chatMessageFluxSink = chatMessageSink.asFlux();
     this.redisChatMessagePublisher = redisChatMessagePublisher;
@@ -32,13 +35,17 @@ public class ChatWebSocketHandler implements WebSocketHandler {
 
   @Override
   public Mono<Void> handle(WebSocketSession webSocketSession) {
-    Flux<WebSocketMessage> sendMessageFlux = chatMessageFluxSink.flatMap(objectStringConverter::objectToString)
-        .map(webSocketSession::textMessage)
-        .doOnError(throwable -> log.error("Error Occurred while sending message to WebSocket.", throwable));
+    Flux<WebSocketMessage> sendMessageFlux =
+        chatMessageFluxSink
+            .flatMap(objectStringConverter::objectToString)
+            .map(webSocketSession::textMessage)
+            .doOnError(throwable -> log.error("Error Occurred while sending message to WebSocket.", throwable));
     Mono<Void> outputMessage = webSocketSession.send(sendMessageFlux);
 
     Mono<Void> inputMessage = webSocketSession.receive()
-        .flatMap(webSocketMessage -> redisChatMessagePublisher.publishChatMessage(webSocketMessage.getPayloadAsText()))
+        .flatMap(webSocketMessage ->
+            redisChatMessagePublisher.publishChatMessage(
+                webSocketMessage.getPayloadAsText()))
         .doOnSubscribe(subscription -> {
           long activeUserCount = activeUserCounter.incrementAndGet();
           log.info("User '{}' Connected. Total Active Users: {}", webSocketSession.getId(), activeUserCount);
@@ -56,12 +63,13 @@ public class ChatWebSocketHandler implements WebSocketHandler {
   }
 
   public Mono<Sinks.EmitResult> sendMessage(ChatMessage chatMessage) {
-    return Mono.fromSupplier(() -> chatMessageSink.tryEmitNext(chatMessage))
+    return Mono.fromSupplier(() ->
+            chatMessageSink
+                .tryEmitNext(chatMessage))
         .doOnSuccess(emitResult -> {
           if (emitResult.isFailure()) {
             log.error("Failed to send message with id: {}", chatMessage.getId());
           }
         });
   }
-
 }
